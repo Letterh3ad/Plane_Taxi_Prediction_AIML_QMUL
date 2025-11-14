@@ -41,6 +41,9 @@ X_train_scaled = scaler.fit_transform(X_train)
 X_val_scaled = scaler.transform(X_val)
 X_test_scaled = scaler.transform(X_test)
 
+# Also scale the full dataset (transform only)
+X_full_scaled = scaler.transform(X)
+
 # PCA FIT ON TRAINING ONLY
 
 pca = PCA().fit(X_train_scaled)
@@ -57,6 +60,7 @@ pca = PCA(n_components=n_components)
 X_train_pca = pca.fit_transform(X_train_scaled)
 X_val_pca = pca.transform(X_val_scaled)
 X_test_pca = pca.transform(X_test_scaled)
+X_full_pca = pca.transform(X_full_scaled)
 
 # FEATURE IMPORTANCE (ABSOLUTE PCA LOADINGS)
 
@@ -75,7 +79,6 @@ feature_importance.to_csv("feature_importance.csv")
 print("\nTop Features Driving PCA:")
 print(feature_importance.head(10))
 
-
 # CUMULATIVE VARIANCE TABLE
 
 cum_var_table = pd.DataFrame({
@@ -89,7 +92,6 @@ cum_var_table.to_csv("pca_cumulative_variance_table.csv", index=False)
 print("\nCumulative Variance Table:")
 print(cum_var_table)
 
-
 # BAR CHART OF CUMULATIVE VARIANCE
 
 plt.figure(figsize=(10,6))
@@ -101,8 +103,7 @@ plt.ylabel("Cumulative Explained Variance")
 plt.grid(axis="y")
 plt.savefig("pca_cumulative_variance_bar.png", dpi=200)
 
-
-# SAVE REDUCED DATASETS
+# SAVE REDUCED SPLIT DATASETS
 
 train_out = pd.DataFrame(X_train_pca, columns=[f"PC{i+1}" for i in range(n_components)])
 train_out[TARGET] = y_train.values
@@ -115,6 +116,17 @@ val_out.to_csv("validation_reduced.csv", index=False)
 test_out = pd.DataFrame(X_test_pca, columns=[f"PC{i+1}" for i in range(n_components)])
 test_out[TARGET] = y_test.values
 test_out.to_csv("test_reduced.csv", index=False)
+
+# SAVE FULL DATASET (NO SPLIT)
+
+full_out = pd.DataFrame(X_full_pca, columns=[f"PC{i+1}" for i in range(n_components)])
+full_out[TARGET] = y.values
+full_out.to_csv("full_reduced.csv", index=False)
+
+# OPTIONAL: save scaled full dataset
+full_scaled_df = pd.DataFrame(X_full_scaled, columns=numeric_features)
+full_scaled_df[TARGET] = y.values
+full_scaled_df.to_csv("full_scaled.csv", index=False)
 
 # SCREE PLOT
 
@@ -132,6 +144,8 @@ print("Files written:")
 print("- train_reduced.csv")
 print("- validation_reduced.csv")
 print("- test_reduced.csv")
+print("- full_reduced.csv")
+print("- full_scaled.csv")
 print("- feature_importance.csv")
 print("- pca_scree_plot.png")
 print("- pca_cumulative_variance_bar.png")
