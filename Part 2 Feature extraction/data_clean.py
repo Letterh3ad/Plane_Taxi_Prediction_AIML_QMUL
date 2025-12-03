@@ -25,7 +25,7 @@ files = sorted(glob.glob(os.path.join(DATA_FOLDER, PATTERN)))
 if not files:
     raise ValueError("No feature files found.")
 
-print("\n=== Loading Raw Feature Files ===")
+print("\n Loading Raw Feature Files ")
 dfs = []
 for fname in files:
     print(f"  Loaded: {fname}")
@@ -46,19 +46,24 @@ y = df[TARGET].copy()
 
 
 # 1. HANDLE MISSING VALUES
-print("\n=== Handling Missing Values ===")
-missing_before = X.isna().sum().sum()
+print("\n=== Removing Missing Value Rows ===")
+missing_before = df.isna().sum().sum()
 print(f"Missing values before: {missing_before}")
 
-# Fill missing values with column means
-X = X.fillna(X.mean())
+# Drop any row containing NaN in features or target
+clean_df = df.dropna(axis=0, how="any")
 
-missing_after = X.isna().sum().sum()
-print(f"Missing values after: {missing_after}")
+print(f"Rows before drop: {len(df)}")
+print(f"Rows after drop: {len(clean_df)}")
+print(f"Dropped rows: {len(df) - len(clean_df)}")
+
+# Re-split into X and y after drop
+X = clean_df[numeric_features].copy()
+y = clean_df[TARGET].copy()
 
 
 # 2. REMOVE NEAR-ZERO VARIANCE FEATURES
-print("\n=== Variance Screening ===")
+print("\n Variance Screening ")
 variances = X.var()
 
 low_var_features = variances[variances < MIN_VARIANCE].index.tolist()
@@ -70,7 +75,7 @@ numeric_features = [c for c in X.columns]
 
 
 # 3. WINSORISATION OF OUTLIERS
-print("\n=== Winsorising Outliers ===")
+print("\n Winsorising Outliers ")
 X_wins = X.copy()
 
 for col in numeric_features:
@@ -82,7 +87,7 @@ X = X_wins
 
 
 # 4. REMOVE HIGHLY CORRELATED FEATURES
-print("\n=== Correlation Pruning ===")
+print("\n Correlation Pruning ")
 
 corr_matrix = X.corr().abs()
 
@@ -104,7 +109,7 @@ cleaned_df[TARGET] = y
 
 cleaned_df.to_csv("features_cleaned.csv", index=False)
 
-print("\n=== Cleaning Complete ===")
+print("\n Cleaning Complete ")
 print(f"Output file: features_cleaned.csv")
 print(f"Remaining features: {len(numeric_features)}")
 print(f"Total rows: {len(cleaned_df)}")
