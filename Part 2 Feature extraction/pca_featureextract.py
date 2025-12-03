@@ -8,18 +8,13 @@ import matplotlib.pyplot as plt
 # CONFIG
 
 DATASETS = [
-    "features_01.csv",
-    "features_03.csv",
-    "features_05.csv",
-    "features_07.csv",
-    "features_09.csv",
-    "features_11.csv"
-]  # Any number of files with identical columns
+    "features_cleaned.csv"
+]
 
 TARGET = "taxi_time"
 TEST_SIZE = 0.30
 VAL_SPLIT = 1/3
-VAR_THRESHOLD = 0.95   # PCA retained variance
+VAR_THRESHOLD = 0.95
 
 
 # LOAD & CONCAT MULTIPLE DATASETS
@@ -44,7 +39,7 @@ y = df[TARGET].copy()
 X = X.fillna(X.mean())
 
 
-# TRAIN / VAL / TEST SPLIT (70 / 20 / 10)
+# TRAIN / VAL / TEST SPLIT
 
 X_train, X_temp, y_train, y_temp = train_test_split(
     X, y, test_size=TEST_SIZE, shuffle=True, random_state=42
@@ -79,7 +74,7 @@ save_scaled("scaled_full.csv",  X_full_scaled,  y)
 print("Scaled datasets written.")
 
 
-# PCA (Fit on TRAIN scaled only)
+# PCA (fit only on TRAIN scaled)
 
 pca_full = PCA().fit(X_train_scaled)
 expl_var = pca_full.explained_variance_ratio_
@@ -110,6 +105,19 @@ save_reduced("reduced_test.csv",  X_test_pca,  y_test)
 save_reduced("reduced_full.csv",  X_full_pca,  y)
 
 print("Reduced datasets written.")
+
+
+# NEW: EXPORT BOTH FULL-SCALED AND PCA-REDUCED VERSIONS OF THE DATASET
+
+df_scaled_full = pd.DataFrame(X_full_scaled, columns=numeric_features)
+df_scaled_full[TARGET] = y.values
+df_scaled_full.to_csv("combined_scaled.csv", index=False)
+
+df_reduced_full = pd.DataFrame(X_full_pca, columns=pc_cols)
+df_reduced_full[TARGET] = y.values
+df_reduced_full.to_csv("combined_reduced.csv", index=False)
+
+print("Combined scaled and reduced datasets written.")
 
 
 # FEATURE IMPORTANCE + VARIANCE TABLE
